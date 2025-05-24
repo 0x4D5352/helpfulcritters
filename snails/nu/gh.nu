@@ -31,3 +31,13 @@ http get --headers $headers $"($api_path)groups/rules" | flatten | flatten | whe
 
 gh repo list --limit 64 --json name,updatedAt,description,isFork | from json | move description isFork --after name | to md --pretty | save ~/path/to/obsidian-vault/all_repos.md --append
 
+
+# semgrepping an org's rep
+
+gh repo list $org | save allrepos.json # i know this doesn't work but assume it does, its just to get the names
+
+open allrepos.json | get name | each { |repo| (gh repo clone $"($org)/($repo)"; cd $repo; semgrep scan $"--output=($repo)-findings.txt --json-output=($repo)-findings.json" --metrics=off --historical-secrets --matching-explanations --max-target-bytes=0 --time ) }
+
+gh repo list $org --no-archived -L 190 --json name | from json | get name |  each { |repo| (gh repo clone $"($org)/($repo)"; cd $repo; semgrep ci; cd .. ) }
+
+gh repo list $org --no-archived -L 190 --json name | from json | get name |  each { |repo| (gh repo clone $"($org)/($repo)"; cd $repo; semgrep scan --output=findings.txt --json-output=findings.json --max-target-bytes=0; cd .. ) }
